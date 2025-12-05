@@ -1,0 +1,19 @@
+{
+  "name": "morse_me - TypeScript Node",
+  "image": "mcr.microsoft.com/vscode/devcontainers/typescript-node:0-20",
+  "postCreateCommand": "npm install",
+  "forwardPorts": [3000],
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  }
+}
