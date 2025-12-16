@@ -17,6 +17,7 @@
     "dist"
   ],
   "dependencies": {
+    "pcm-player": "^0.0.18",
     "yargs": "^18.0.0-candidate.7"
   },
   "devDependencies": {
