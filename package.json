@@ -4,7 +4,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "morse": "dist/index.js"
+    "morse_it": "cli.mjs"
   },
   "scripts": {
     "build": "tsc",
@@ -12,6 +12,7 @@
     "prepublishOnly": "npm run build"
   },
   "files": [
+    "cli.mjs",
     "dist"
   ],
   "dependencies": {
