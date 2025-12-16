@@ -1,13 +1,26 @@
 # morse_me
 
-CLI Node.js/TypeScript pour encoder du texte en code Morse.
+CLI Node.js/TypeScript pour convertir des fichiers texte en code Morse.
 
-## Prérequis
+## 🚀 Aperçu
 
-- Node.js 20 ou version supérieure
-- npm 10 ou version supérieure
+- Interface de ligne de commande basée sur `yargs` (`morse_it`).
+- Conversion caractère par caractère grâce à la table complète définie dans `library.ts`.
+- Signalement des caractères non pris en charge pour faciliter le nettoyage des données.
 
-## Installation
+## 📦 Prérequis
+
+- Node.js ≥ 20
+- npm ≥ 10
+
+Vérifie tes versions :
+
+```bash
+node --version
+npm --version
+```
+
+## 🔧 Installation
 
 ```bash
 git clone <repo-url>
@@ -15,60 +28,74 @@ cd morse_me
 npm install
 ```
 
-## Compilation
+## 🛠️ Scripts npm
 
-```bash
-npm run build
-```
+| Script | Description |
+|--------|-------------|
+| `npm run build` | Compile TypeScript vers `dist/` via `tsc`. |
+| `npm start` | Exécute la version compilée (`node dist/index.js`). |
+| `npm test` | Placeholder qui affiche un message (à remplacer par ta suite de tests). |
+| `npm run prepublishOnly` | Compile automatiquement avant une publication npm. |
 
-Le code compilé est placé dans `dist/` et publié via la commande `npm publish`.
+## 🔁 Utilisation du CLI
 
-## Utilisation du CLI
+1. Compile d’abord :
+	```bash
+	npm run build
+	```
+2. Exemple de traduction d’un fichier :
+	```bash
+	node dist/index.js encode README.md
+	```
+	Le résultat affiche un bloc par fichier et indique les caractères ignorés (`Skipped characters`).
 
-Après compilation, exécute la commande suivante :
+### Alias binaire `morse_it`
 
-```bash
-npx morse_it encode "HELLO"
-# ou
-node dist/index.js encode "HELLO"
-```
+- Installation locale : `npm link`
+- Utilisation :
+  ```bash
+  morse_it encode chemin/vers/fichier.txt
+  ```
 
-Le binaire `morse_it` sera disponible dans le dossier `node_modules/.bin` après installation. Les options additionnelles seront documentées au fur et à mesure de leur implémentation.
+### Remarques
 
-## Tests
+- Les caractères non présents dans `library.ts` sont signalés mais ignorés dans la sortie.
+- Pour un format pur texte, la table Morse emploie déjà `.` et `-`.
 
-Ajoute tes tests (ex. Jest, Mocha) puis exécute :
+## 🧪 Tests
 
-```bash
-npm test
-```
+`npm test` renvoie pour l’instant « No automated tests defined yet ». Remplace la commande par Jest, Vitest ou tout autre framework lorsque tu ajoutes des tests.
 
-Par défaut, la commande est un placeholder ; adapte-la selon le framework que tu intègres.
+## 🐳 Dev Container
 
-## Développement
-
-- Lint : `npm run lint` (ou `npm run lint:fix` si tu ajoutes un script correspondant)
-- Build : `npm run build`
-- Watch : ajoute un script `npm run dev` si besoin
-
-## Devcontainer VS Code
-
-Un devcontainer est disponible dans `.devcontainer/devcontainer.json`.
+Fichier : `.devcontainer/devcontainer.json`
 
 1. Ouvre le dossier dans VS Code.
-2. Commande palette > "Dev Containers: Reopen in Container".
-3. `npm install` est déclenché automatiquement dans le conteneur.
+2. Menu Command Palette → « Dev Containers: Reopen in Container ».
+3. `npm install` est lancé automatiquement (Node 20, extensions ESLint/Prettier/TS incluses).
 
-## Intégration Continue
+## 🔄 Intégration Continue
 
-Le workflow `.github/workflows/ci.yml` :
+Le workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) effectue :
 
-1. Installe les dépendances (`npm ci`).
-2. Exécute le lint.
-3. Compile le projet (`npm run build`).
-4. Lance `npm test`.
-5. Exécute un smoke test du CLI.
+1. `npm ci`
+2. `npm run lint:fix` (en mode tolérant)
+3. `npm run build`
+4. `npm test`
+5. Un smoke test du CLI
 
-## Licence
+Adapter `npm test` pour refléter ta vraie suite avant de faire confiance aux pipelines.
 
-ISC. Remplace cette section si tu utilises une autre licence.
+## 📁 Structure rapide
+
+| Chemin | Rôle |
+|--------|------|
+| `index.ts` | Point d’entrée du CLI et définition de la commande `encode`. |
+| `read.files.ts` | Lecture asynchrone des fichiers à encoder. |
+| `translate.files.ts` | Conversion du texte en séquences Morse et rapport des caractères ignorés. |
+| `library.ts` | Table Morse (pattern et timings). |
+| `cli.mjs` | Shim Node utilisé par le binaire publié `morse_it`. |
+
+## 📄 Licence
+
+ISC
