@@ -10,13 +10,14 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build",
-    "test": "echo \"No automated tests defined yet\""
+    "test": "npm run build && node --test dist/tests"
   },
   "files": [
     "cli.mjs",
     "dist"
   ],
   "dependencies": {
+    "pcm-player": "^0.0.18",
     "yargs": "^18.0.0-candidate.7"
   },
   "devDependencies": {
