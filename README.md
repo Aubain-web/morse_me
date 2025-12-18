@@ -52,10 +52,9 @@ npm install
 	```bash
 	node dist/index.js play README.md
 	```
-	Pour garder le fichier WAV :
-	```bash
-	node dist/index.js play README.md --out morse.wav
-	```
+	Par défaut, aucun fichier audio n’est conservé sur le disque (le WAV est temporaire et supprimé).
+	Optionnel (debug / export) : enregistrer un WAV sur disque avec `--out`.
+	Si tu veux seulement enregistrer sans lecture, ajoute `--no-play`.
 
 ### Alias binaire `morse_it`
 

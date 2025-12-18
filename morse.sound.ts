@@ -198,26 +198,35 @@ async function playMorseFromText(
     return { wavPath: '', played: false };
   }
 
+  if (!shouldPlay && !options.outFile) {
+    // User explicitly disabled playback and didn't request saving.
+    // Do nothing to avoid writing files to disk.
+    return { wavPath: '', played: false };
+  }
+
   const wav = encodeWavPcm16Mono(samples, sampleRateHz);
 
-  const wavPath = options.outFile
-    ? path.resolve(options.outFile)
+  const isExplicitOutput = Boolean(options.outFile);
+  const wavPath = isExplicitOutput
+    ? path.resolve(options.outFile as string)
     : path.join(os.tmpdir(), `morse_it_${process.pid}_${Date.now()}.wav`);
 
   await fs.writeFile(wavPath, wav);
 
-  let played = false;
-  if (shouldPlay) {
-    played = await playWavFileCrossPlatform(wavPath);
-  }
+  try {
+    let played = false;
+    if (shouldPlay) {
+      played = await playWavFileCrossPlatform(wavPath);
+    }
 
-  // If we created a temp file and playback succeeded, cleanup.
-  if (!options.outFile && played) {
-    await fs.rm(wavPath, { force: true });
-    return { wavPath: '', played: true };
+    // Only return a path when the user explicitly requested it.
+    return { wavPath: isExplicitOutput ? wavPath : '', played };
+  } finally {
+    // Never leave temp audio files behind on users' machines.
+    if (!isExplicitOutput) {
+      await fs.rm(wavPath, { force: true });
+    }
   }
-
-  return { wavPath, played };
 }
 
 export {

@@ -54,6 +54,15 @@ yargs(hideBin(process.argv))
           type: 'boolean',
           default: true,
         })
+        .coerce('play', (value) => {
+          if (typeof value === 'boolean') return value;
+          if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            if (normalized === 'false' || normalized === '0' || normalized === 'no') return false;
+            if (normalized === 'true' || normalized === '1' || normalized === 'yes') return true;
+          }
+          return Boolean(value);
+        })
         .option('frequency', {
           alias: 'f',
           describe: 'Beep frequency in Hz',
@@ -71,6 +80,14 @@ yargs(hideBin(process.argv))
       const targetFiles = files as string[];
       const contents = await readFiles(targetFiles);
 
+      const shouldPlay = argv.play === true;
+
+      if (!shouldPlay && !argv.out) {
+        console.error('Nothing to do: use playback (default) or provide --out to save a WAV file.');
+        process.exitCode = 1;
+        return;
+      }
+
       for (let index = 0; index < contents.length; index += 1) {
         const file = targetFiles[index];
         const text = contents[index] ?? '';
@@ -80,16 +97,19 @@ yargs(hideBin(process.argv))
           frequencyHz: argv.frequency as number,
           unitMs: argv.unitMs as number,
           outFile: (argv.out as string | undefined) || undefined,
-          play: argv.play as boolean,
+          play: shouldPlay,
         });
 
-        if (result.wavPath && (argv.play as boolean) === false) {
+        if (result.wavPath && !shouldPlay) {
           console.log(`WAV saved to: ${result.wavPath}`);
         } else if (!result.played) {
           if (result.wavPath) {
             console.warn(`Could not auto-play audio. WAV saved to: ${result.wavPath}`);
           } else {
-            console.warn('Nothing to play (empty or unsupported characters).');
+            console.warn(
+              'Could not auto-play audio. No file was kept on disk. ' +
+                'Install an audio player (macOS: afplay, Linux: paplay/aplay, or ffplay) or use --out.'
+            );
           }
         }
       }
