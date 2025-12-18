@@ -199,8 +199,6 @@ async function playMorseFromText(
   }
 
   if (!shouldPlay && !options.outFile) {
-    // User explicitly disabled playback and didn't request saving.
-    // Do nothing to avoid writing files to disk.
     return { wavPath: '', played: false };
   }
 
