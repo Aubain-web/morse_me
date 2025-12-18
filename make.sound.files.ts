@@ -51,7 +51,6 @@ function stopPlayer(): void {
   }
 }
 
-// Don't auto-play on module load
-// playTone(440, 1);
+
 
 export { generateTone, playTone, stopPlayer, initializePlayer };

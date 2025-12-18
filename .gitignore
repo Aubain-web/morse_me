@@ -16,3 +16,6 @@ npm-debug.log*
 # Build output
 dist/
 build/
+
+# Generated audio outputs
+*.wav

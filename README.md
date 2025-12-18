@@ -48,6 +48,14 @@ npm install
 	node dist/index.js encode README.md
 	```
 	Le résultat affiche un bloc par fichier et indique les caractères ignorés (`Skipped characters`).
+3. Lecture audio (génère un WAV et tente de le jouer) :
+	```bash
+	node dist/index.js play README.md
+	```
+	Pour garder le fichier WAV :
+	```bash
+	node dist/index.js play README.md --out morse.wav
+	```
 
 ### Alias binaire `morse_it`
 
