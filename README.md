@@ -56,6 +56,26 @@ npm install
 	Optionnel (debug / export) : enregistrer un WAV sur disque avec `--out`.
 	Si tu veux seulement enregistrer sans lecture, ajoute `--no-play`.
 
+#### Dépannage audio (selon l’OS)
+
+La commande `play` génère un WAV temporaire puis essaye de le lire via un outil système. Si tu n’entends rien :
+
+- Windows : lecture via PowerShell `System.Media.SoundPlayer` (normalement déjà disponible).
+- macOS : lecture via `afplay` (fourni par défaut sur macOS).
+- Linux : essaye `paplay`, puis `aplay`, puis `ffplay`.
+
+Si tu es sur Linux et que ça ne joue pas, installe au moins un de ces outils :
+
+- PulseAudio : `paplay` (souvent via le paquet `pulseaudio-utils`)
+- ALSA : `aplay` (souvent via le paquet `alsa-utils`)
+- FFmpeg : `ffplay` (souvent via le paquet `ffmpeg`)
+
+En cas de doute, tu peux exporter un fichier WAV pour tester avec ton lecteur habituel :
+
+```bash
+node dist/index.js play README.md --no-play --out morse.wav
+```
+
 ### Alias binaire `morse_it`
 
 - Installation locale : `npm link`
