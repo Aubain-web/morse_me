@@ -13,10 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Use Node.js 20
+      - name: Use Node.js 24
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Run linter
-        run: npm run lint:fix || true
+        run: npm run lint
 
       - name: Build
         run: npm run build
@@ -40,6 +40,7 @@ jobs:
 
       - name: Smoke test CLI
         run: |
-          if npm run --silent --silent --no-install --silent --version >/dev/null 2>&1; then
-            echo 'skip'
-          fi
+          printf 'SOS morse me' > sample.txt
+          node dist/index.js encode sample.txt
+          node dist/index.js play sample.txt --no-play --out morse.wav
+          node dist/index.js --help
