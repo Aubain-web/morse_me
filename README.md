@@ -34,7 +34,9 @@ npm install
 |--------|-------------|
 | `npm run build` | Compile TypeScript vers `dist/` via `tsc`. |
 | `npm start` | Exécute la version compilée (`node dist/index.js`). |
-| `npm test` | Placeholder qui affiche un message (à remplacer par ta suite de tests). |
+| `npm run lint` | Analyse le code avec ESLint (config plate `eslint.config.mts`). |
+| `npm run lint:fix` | Analyse et corrige automatiquement ce qui peut l'être. |
+| `npm test` | Compile puis exécute la suite de tests via `node --test` (`dist/tests`). |
 | `npm run prepublishOnly` | Compile automatiquement avant une publication npm. |
 
 ## 🔁 Utilisation du CLI
