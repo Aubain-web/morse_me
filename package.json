@@ -21,7 +21,8 @@
   },
   "files": [
     "cli.mjs",
-    "dist"
+    "dist",
+    "!dist/tests"
   ],
   "dependencies": {
     "yargs": "^18.0.0"
