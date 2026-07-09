@@ -19,3 +19,5 @@ build/
 
 # Generated audio outputs
 *.wav
+
+.claude
