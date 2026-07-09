@@ -26,7 +26,8 @@
   "files": [
     "cli.mjs",
     "dist",
-    "!dist/tests"
+    "!dist/tests",
+    "!dist/**/*.map"
   ],
   "dependencies": {
     "yargs": "^18.0.0"
