@@ -60,7 +60,8 @@ test('readFiles: reports a directory without throwing', async () => {
     const results = await readFiles([dir]);
 
     assert.equal(results[0]?.content, null);
-    assert.match(results[0]?.error ?? '', /is a directory/);
+    // Windows reports EPERM rather than EISDIR when opening a directory.
+    assert.match(results[0]?.error ?? '', /is a directory|permission denied/);
   });
 });
 

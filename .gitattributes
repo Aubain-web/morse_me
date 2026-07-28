@@ -1,0 +1,6 @@
+# Normalise line endings so Windows checkouts do not differ from Linux/macOS.
+# Without this, git checks out CRLF on Windows and Prettier's endOfLine: "lf"
+# reports every file as unformatted.
+* text=auto eol=lf
+
+*.wav binary

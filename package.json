@@ -51,7 +51,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepublishOnly": "npm run build",
-    "test": "npm run build && node --test \"dist/tests/**/*.test.js\""
+    "test": "npm run build && node scripts/run-tests.mjs"
   },
   "files": [
     "cli.mjs",
