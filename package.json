@@ -1,8 +1,27 @@
 {
   "name": "@aubain-nicolas/morse-me",
-  "version": "1.1.2",
+  "version": "2.0.0",
+  "description": "Encode text to Morse code, decode it back, and play it as audio — as a CLI or a library.",
+  "keywords": [
+    "morse",
+    "morse-code",
+    "cli",
+    "encode",
+    "decode",
+    "wav",
+    "audio"
+  ],
   "type": "module",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "license": "ISC",
   "repository": {
     "type": "git",
@@ -24,16 +43,20 @@
     "registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc",
+    "start": "node cli.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepublishOnly": "npm run build",
     "test": "npm run build && node --test \"dist/tests/**/*.test.js\""
   },
   "files": [
     "cli.mjs",
     "dist",
+    "LICENSE",
     "!dist/tests",
     "!dist/**/*.map"
   ],
@@ -47,6 +70,7 @@
     "eslint": "^9.15.0",
     "globals": "^15.12.0",
     "jiti": "^2.4.0",
+    "prettier": "^3.4.2",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.15.0"
   }

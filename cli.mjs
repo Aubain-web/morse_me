@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import('./dist/index.js').catch((error) => {
-  console.error(error);
+import('./dist/cli.js').catch((error) => {
+  console.error(`Error: ${error?.message ?? error}`);
   process.exitCode = 1;
 });

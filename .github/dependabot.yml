@@ -1,15 +1,38 @@
 version: 2
 updates:
-  # Update npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
+  # npm dependencies — grouped so routine bumps land as one PR per ecosystem
+  # slice instead of flooding the history one dependency at a time.
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      dev-dependencies:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+      production-dependencies:
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
 
-  # Update Dev Container image
-  - package-ecosystem: "devcontainers"
-    directory: "/"
+  # GitHub Actions used by the workflows
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+
+  # Dev Container image
+  - package-ecosystem: 'devcontainers'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 2

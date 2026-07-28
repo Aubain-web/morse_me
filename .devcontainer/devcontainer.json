@@ -1,6 +1,6 @@
 {
   "name": "morse_me - TypeScript Node",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22",
   "postCreateCommand": "npm install && git config --global --unset-all safe.directory || true && git config --global --add safe.directory /workspaces/morse_me",
   "forwardPorts": [3000],
   "remoteUser": "node",

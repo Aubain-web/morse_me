@@ -4,67 +4,105 @@ interface MorseCode {
   timing: number[];
 }
 
-const MORSE_CODE: Record<string, MorseCode> = {
-  'A': { char: 'A', pattern: '.-', timing: [1, 1, 3] },
-  'B': { char: 'B', pattern: '-...', timing: [3, 1, 1, 1, 1, 1, 1] },
-  'C': { char: 'C', pattern: '-.-.', timing: [3, 1, 1, 1, 3, 1, 1] },
-  'D': { char: 'D', pattern: '-..', timing: [3, 1, 1, 1, 1, 1] },
-  'E': { char: 'E', pattern: '.', timing: [1] },
-  'F': { char: 'F', pattern: '..-.', timing: [1, 1, 1, 1, 3, 1, 1] },
-  'G': { char: 'G', pattern: '--.', timing: [3, 1, 3, 1, 1] },
-  'H': { char: 'H', pattern: '....', timing: [1, 1, 1, 1, 1, 1, 1] },
-  'I': { char: 'I', pattern: '..', timing: [1, 1, 1] },
-  'J': { char: 'J', pattern: '.---', timing: [1, 1, 3, 1, 3, 1, 3] },
-  'K': { char: 'K', pattern: '-.-', timing: [3, 1, 1, 1, 3] },
-  'L': { char: 'L', pattern: '.-..', timing: [1, 1, 3, 1, 1, 1, 1] },
-  'M': { char: 'M', pattern: '--', timing: [3, 1, 3] },
-  'N': { char: 'N', pattern: '-.', timing: [3, 1, 1] },
-  'O': { char: 'O', pattern: '---', timing: [3, 1, 3, 1, 3] },
-  'P': { char: 'P', pattern: '.--.', timing: [1, 1, 3, 1, 3, 1, 1] },
-  'Q': { char: 'Q', pattern: '--.-', timing: [3, 1, 3, 1, 1, 1, 3] },
-  'R': { char: 'R', pattern: '.-.', timing: [1, 1, 3, 1, 1] },
-  'S': { char: 'S', pattern: '...', timing: [1, 1, 1, 1, 1] },
-  'T': { char: 'T', pattern: '-', timing: [3] },
-  'U': { char: 'U', pattern: '..-', timing: [1, 1, 1, 1, 3] },
-  'V': { char: 'V', pattern: '...-', timing: [1, 1, 1, 1, 1, 1, 3] },
-  'W': { char: 'W', pattern: '.--', timing: [1, 1, 3, 1, 3] },
-  'X': { char: 'X', pattern: '-..-', timing: [3, 1, 1, 1, 1, 1, 3] },
-  'Y': { char: 'Y', pattern: '-.--', timing: [3, 1, 1, 1, 3, 1, 3] },
-  'Z': { char: 'Z', pattern: '--..', timing: [3, 1, 3, 1, 1, 1, 1] },
-  'Á': { char: 'Á', pattern: '.--.-', timing: [1, 1, 3, 1, 3, 1, 1, 1, 3] },
-  'Ä': { char: 'Ä', pattern: '.-.-', timing: [1, 1, 3, 1, 1, 1, 3] },
-  'É': { char: 'É', pattern: '..-..', timing: [1, 1, 1, 1, 3, 1, 1, 1, 1] },
-  'Ñ': { char: 'Ñ', pattern: '--.--', timing: [3, 1, 3, 1, 1, 1, 3, 1, 3] },
-  'Ö': { char: 'Ö', pattern: '---.', timing: [3, 1, 3, 1, 3, 1, 1] },
-  'Ü': { char: 'Ü', pattern: '..--', timing: [1, 1, 1, 1, 3, 1, 3] },
-  '0': { char: '0', pattern: '-----', timing: [3, 1, 3, 1, 3, 1, 3, 1, 3] },
-  '1': { char: '1', pattern: '.----', timing: [1, 1, 3, 1, 3, 1, 3, 1, 3] },
-  '2': { char: '2', pattern: '..---', timing: [1, 1, 1, 1, 3, 1, 3, 1, 3] },
-  '3': { char: '3', pattern: '...--', timing: [1, 1, 1, 1, 1, 1, 3, 1, 3] },
-  '4': { char: '4', pattern: '....-', timing: [1, 1, 1, 1, 1, 1, 1, 1, 3] },
-  '5': { char: '5', pattern: '.....', timing: [1, 1, 1, 1, 1, 1, 1, 1, 1] },
-  '6': { char: '6', pattern: '-....', timing: [3, 1, 1, 1, 1, 1, 1, 1, 1] },
-  '7': { char: '7', pattern: '--...', timing: [3, 1, 3, 1, 1, 1, 1, 1, 1] },
-  '8': { char: '8', pattern: '---..', timing: [3, 1, 3, 1, 3, 1, 1, 1, 1] },
-  '9': { char: '9', pattern: '----.', timing: [3, 1, 3, 1, 3, 1, 3, 1, 1] },
-  ',': { char: ',', pattern: '--..--', timing: [3, 1, 3, 1, 1, 1, 1, 1, 3, 1, 3] },
-  '.': { char: '.', pattern: '.-.-.-', timing: [1, 1, 3, 1, 1, 1, 3, 1, 1, 1, 3] },
-  '?': { char: '?', pattern: '..--..', timing: [1, 1, 1, 1, 3, 1, 3, 1, 1, 1, 1] },
-  '"': { char: '"', pattern: '.-..-.', timing: [1, 1, 3, 1, 1, 1, 1, 1, 3, 1, 1] },
-  ':': { char: ':', pattern: '---...', timing: [3, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1] },
-  "'": { char: "'", pattern: '.----.', timing: [1, 1, 3, 1, 3, 1, 3, 1, 3, 1, 1] },
-  '-': { char: '-', pattern: '-....-', timing: [3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3] },
-  '/': { char: '/', pattern: '-..-.', timing: [3, 1, 1, 1, 1, 1, 3, 1, 1] },
-  '(': { char: '(', pattern: '-.--.', timing: [3, 1, 1, 1, 3, 1, 3, 1, 1] },
-  ')': { char: ')', pattern: '-.--.-', timing: [3, 1, 1, 1, 3, 1, 3, 1, 1, 1, 3] }
-};
-
 const TIMING = {
   DOT: 1,
   DASH: 3,
-  INTRA_CHAR_SPACE: 1,    
-  LETTER_SPACE: 3,         
-  WORD_SPACE: 7            
+  INTRA_CHAR_SPACE: 1,
+  LETTER_SPACE: 3,
+  WORD_SPACE: 7,
 } as const;
 
-export { MORSE_CODE, TIMING, type MorseCode };
+/**
+ * Source of truth: one Morse pattern per character.
+ *
+ * Timings are derived from these patterns (see `buildTiming`) rather than
+ * written by hand, so the two representations cannot drift apart.
+ */
+const MORSE_PATTERNS: Record<string, string> = {
+  A: '.-',
+  B: '-...',
+  C: '-.-.',
+  D: '-..',
+  E: '.',
+  F: '..-.',
+  G: '--.',
+  H: '....',
+  I: '..',
+  J: '.---',
+  K: '-.-',
+  L: '.-..',
+  M: '--',
+  N: '-.',
+  O: '---',
+  P: '.--.',
+  Q: '--.-',
+  R: '.-.',
+  S: '...',
+  T: '-',
+  U: '..-',
+  V: '...-',
+  W: '.--',
+  X: '-..-',
+  Y: '-.--',
+  Z: '--..',
+  Á: '.--.-',
+  Ä: '.-.-',
+  É: '..-..',
+  Ñ: '--.--',
+  Ö: '---.',
+  Ü: '..--',
+  '0': '-----',
+  '1': '.----',
+  '2': '..---',
+  '3': '...--',
+  '4': '....-',
+  '5': '.....',
+  '6': '-....',
+  '7': '--...',
+  '8': '---..',
+  '9': '----.',
+  ',': '--..--',
+  '.': '.-.-.-',
+  '?': '..--..',
+  '"': '.-..-.',
+  ':': '---...',
+  "'": '.----.',
+  '-': '-....-',
+  '/': '-..-.',
+  '(': '-.--.',
+  ')': '-.--.-',
+};
+
+/** Duration, in Morse units, of a single `.` or `-` symbol. */
+function symbolUnits(symbol: string): number {
+  return symbol === '-' ? TIMING.DASH : TIMING.DOT;
+}
+
+/** Expand a pattern into alternating symbol / intra-character gap durations. */
+function buildTiming(pattern: string): number[] {
+  const timing: number[] = [];
+
+  for (let index = 0; index < pattern.length; index += 1) {
+    timing.push(symbolUnits(pattern[index] as string));
+
+    if (index < pattern.length - 1) {
+      timing.push(TIMING.INTRA_CHAR_SPACE);
+    }
+  }
+
+  return timing;
+}
+
+const MORSE_CODE: Record<string, MorseCode> = Object.fromEntries(
+  Object.entries(MORSE_PATTERNS).map(([char, pattern]) => [
+    char,
+    { char, pattern, timing: buildTiming(pattern) },
+  ])
+);
+
+/** Reverse lookup used by the decoder. Patterns are unique across the table. */
+const MORSE_BY_PATTERN: Record<string, string> = Object.fromEntries(
+  Object.entries(MORSE_PATTERNS).map(([char, pattern]) => [pattern, char])
+);
+
+export { MORSE_CODE, MORSE_PATTERNS, MORSE_BY_PATTERN, TIMING, buildTiming, type MorseCode };

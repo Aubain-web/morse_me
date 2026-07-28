@@ -1,19 +1,20 @@
 # morse_me
 
-CLI Node.js/TypeScript pour convertir des fichiers texte en code Morse.
+CLI et bibliothèque Node.js/TypeScript pour encoder du texte en code Morse, le décoder, et le jouer en audio.
 
 ## 🚀 Aperçu
 
-- Interface de ligne de commande basée sur `yargs` (`morse_it`).
-- Conversion caractère par caractère grâce à la table complète définie dans `library.ts`.
-- Signalement des caractères non pris en charge pour faciliter le nettoyage des données.
+- CLI `morse_it` basée sur `yargs`, avec trois commandes : `encode`, `decode`, `play`.
+- Entrée au choix : fichiers, option `--text`, ou texte redirigé sur stdin.
+- Table Morse complète (lettres, chiffres, accents, ponctuation) définie dans `library.ts`.
+- Signalement des caractères non pris en charge, à l'encodage comme à la lecture audio.
+- Génération de WAV PCM 16 bits mono, sans dépendance native.
+- Utilisable aussi comme bibliothèque : `import { translateTextToMorse } from '@aubain-nicolas/morse-me'`.
 
 ## 📦 Prérequis
 
 - Node.js ≥ 20
 - npm ≥ 10
-
-Vérifie tes versions :
 
 ```bash
 node --version
@@ -22,109 +23,194 @@ npm --version
 
 ## 🔧 Installation
 
+Depuis npm :
+
 ```bash
-git clone <repo-url>
-cd morse_me
-npm install
+npm install -g @aubain-nicolas/morse-me
+morse_it encode --text "SOS"
 ```
 
-## 🛠️ Scripts npm
+Depuis les sources :
 
-| Script | Description |
-|--------|-------------|
-| `npm run build` | Compile TypeScript vers `dist/` via `tsc`. |
-| `npm start` | Exécute la version compilée (`node dist/index.js`). |
-| `npm run lint` | Analyse le code avec ESLint (config plate `eslint.config.mts`). |
-| `npm run lint:fix` | Analyse et corrige automatiquement ce qui peut l'être. |
-| `npm test` | Compile puis exécute la suite de tests via `node --test` (`dist/tests`). |
-| `npm run prepublishOnly` | Compile automatiquement avant une publication npm. |
+```bash
+git clone https://github.com/Aubain-web/morse_me.git
+cd morse_me
+npm install
+npm run build
+node cli.mjs encode --text "SOS"
+```
 
 ## 🔁 Utilisation du CLI
 
-1. Compile d’abord :
-	```bash
-	npm run build
-	```
-2. Exemple de traduction d’un fichier :
-	```bash
-	node dist/index.js encode README.md
-	```
-	Le résultat affiche un bloc par fichier et indique les caractères ignorés (`Skipped characters`).
-3. Lecture audio (génère un WAV et tente de le jouer) :
-	```bash
-	node dist/index.js play README.md
-	```
-	Par défaut, aucun fichier audio n’est conservé sur le disque (le WAV est temporaire et supprimé).
-	Optionnel (debug / export) : enregistrer un WAV sur disque avec `--out`.
-	Si tu veux seulement enregistrer sans lecture, ajoute `--no-play`.
+Les trois commandes acceptent les mêmes sources d'entrée, dans cet ordre de priorité :
+`--text`, puis les fichiers passés en argument, puis stdin.
 
-#### Dépannage audio (selon l’OS)
-
-La commande `play` génère un WAV temporaire puis essaye de le lire via un outil système. Si tu n’entends rien :
-
-- Windows : lecture via PowerShell `System.Media.SoundPlayer` (normalement déjà disponible).
-- macOS : lecture via `afplay` (fourni par défaut sur macOS).
-- Linux : essaye `paplay`, puis `aplay`, puis `ffplay`.
-
-Si tu es sur Linux et que ça ne joue pas, installe au moins un de ces outils :
-
-- PulseAudio : `paplay` (souvent via le paquet `pulseaudio-utils`)
-- ALSA : `aplay` (souvent via le paquet `alsa-utils`)
-- FFmpeg : `ffplay` (souvent via le paquet `ffmpeg`)
-
-En cas de doute, tu peux exporter un fichier WAV pour tester avec ton lecteur habituel :
+### `encode` — texte → Morse
 
 ```bash
-node dist/index.js play README.md --no-play --out morse.wav
+morse_it encode fichier.txt
+morse_it encode --text "SOS MORSE ME"
+echo "SOS" | morse_it encode
 ```
 
-### Alias binaire `morse_it`
+Les mots sont séparés par `/`, les lettres par une espace, et la structure des lignes est
+préservée. Les caractères absents de la table sont ignorés dans la sortie et listés sur stderr
+(`Skipped characters: …`).
 
-- Installation locale : `npm link`
-- Utilisation :
-  ```bash
-  morse_it encode chemin/vers/fichier.txt
-  ```
+### `decode` — Morse → texte
 
-### Remarques
+```bash
+morse_it decode --text "... --- ... / -- --- .-. ... ."
+# SOS MORSE
+```
 
-- Les caractères non présents dans `library.ts` sont signalés mais ignorés dans la sortie.
-- Pour un format pur texte, la table Morse emploie déjà `.` et `-`.
+`/` et `|` sont acceptés comme séparateurs de mots. Les motifs inconnus sont ignorés et listés
+sur stderr.
+
+### `play` — lecture audio
+
+```bash
+morse_it play fichier.txt                       # joue le Morse, sans rien laisser sur le disque
+morse_it play --text "SOS" --out morse.wav      # joue ET conserve le WAV
+morse_it play fichier.txt --no-play --out m.wav # génère le WAV sans le jouer
+```
+
+| Option                 | Alias | Défaut | Rôle                                                   |
+| ---------------------- | ----- | ------ | ------------------------------------------------------ |
+| `--out`                | `-o`  | —      | Chemin du WAV à conserver.                             |
+| `--play` / `--no-play` | —     | `true` | Tenter (ou non) la lecture audio.                      |
+| `--frequency`          | `-f`  | `800`  | Fréquence du bip, en Hz.                               |
+| `--unitMs`             | `-u`  | `80`   | Durée d'une unité Morse, en ms (point = 1, trait = 3). |
+
+Sans `--out`, le WAV est temporaire et supprimé après lecture. Avec plusieurs fichiers en entrée,
+`--out morse.wav` produit `morse-1.wav`, `morse-2.wav`, … afin qu'aucune sortie n'en écrase une autre.
+
+#### Dépannage audio (selon l'OS)
+
+La lecture passe par un outil système :
+
+- **Windows** : PowerShell `System.Media.SoundPlayer` (disponible par défaut).
+- **macOS** : `afplay` (fourni par défaut).
+- **Linux** : `paplay`, puis `aplay`, puis `ffplay`.
+
+Sur Linux, installe au moins l'un d'entre eux : `pulseaudio-utils` (`paplay`), `alsa-utils`
+(`aplay`) ou `ffmpeg` (`ffplay`). En cas de doute, exporte un WAV et ouvre-le avec ton lecteur
+habituel :
+
+```bash
+morse_it play fichier.txt --no-play --out morse.wav
+```
+
+## 📚 Utilisation comme bibliothèque
+
+Le point d'entrée du paquet n'exécute pas le CLI : il n'expose que l'API.
+
+```ts
+import {
+  translateTextToMorse,
+  translateMorseToText,
+  playMorseFromText,
+  MORSE_CODE,
+} from '@aubain-nicolas/morse-me';
+
+translateTextToMorse('SOS');
+// { output: '... --- ...', skipped: [] }
+
+translateMorseToText('... --- ...');
+// { output: 'SOS', skipped: [] }
+
+await playMorseFromText('SOS', { outFile: 'sos.wav', play: false });
+// { wavPath: '/chemin/absolu/sos.wav', played: false }
+```
+
+Principaux exports : `translateTextToMorse`, `translateMorseToText`, `playMorseFromText`,
+`buildBeepSchedule`, `renderMorseWavSamples`, `encodeWavPcm16Mono`, `readFiles`, `resolveInputs`,
+`MORSE_CODE`, `MORSE_PATTERNS`, `MORSE_BY_PATTERN`, `TIMING`.
+
+### Timings
+
+Les durées suivent le standard Morse, exprimées en unités (`TIMING`) :
+
+| Élément                                  | Unités |
+| ---------------------------------------- | ------ |
+| Point                                    | 1      |
+| Trait                                    | 3      |
+| Silence entre symboles d'une même lettre | 1      |
+| Silence entre deux lettres               | 3      |
+| Silence entre deux mots                  | 7      |
+
+Les silences ne s'additionnent pas : la séparation entre deux mots vaut exactement 7 unités, pas
+3 + 7. Une séquence ne commence ni ne se termine par du silence.
+
+## 🛠️ Scripts npm
+
+| Script                   | Description                                                     |
+| ------------------------ | --------------------------------------------------------------- |
+| `npm run build`          | Nettoie `dist/` puis compile TypeScript via `tsc`.              |
+| `npm run clean`          | Supprime `dist/`.                                               |
+| `npm start`              | Lance le CLI (`node cli.mjs`).                                  |
+| `npm run lint`           | Analyse le code avec ESLint (config plate `eslint.config.mts`). |
+| `npm run lint:fix`       | Analyse et corrige automatiquement ce qui peut l'être.          |
+| `npm run format`         | Formate le code avec Prettier.                                  |
+| `npm run format:check`   | Vérifie le formatage sans modifier les fichiers.                |
+| `npm test`               | Compile puis exécute la suite de tests via `node --test`.       |
+| `npm run prepublishOnly` | Compile automatiquement avant une publication npm.              |
 
 ## 🧪 Tests
 
-`npm test` renvoie pour l’instant « No automated tests defined yet ». Remplace la commande par Jest, Vitest ou tout autre framework lorsque tu ajoutes des tests.
+```bash
+npm test
+```
+
+La suite couvre la table Morse et sa cohérence, l'encodage, le décodage, les aller-retours
+texte → Morse → texte, la planification des bips, la génération WAV, la lecture de fichiers et le
+CLI de bout en bout (via `child_process`).
 
 ## 🐳 Dev Container
 
-Fichier : `.devcontainer/devcontainer.json`
+Fichier : `.devcontainer/devcontainer.json` (Node 22, extensions ESLint/Prettier/TS).
 
 1. Ouvre le dossier dans VS Code.
-2. Menu Command Palette → « Dev Containers: Reopen in Container ».
-3. `npm install` est lancé automatiquement (Node 20, extensions ESLint/Prettier/TS incluses).
+2. Command Palette → « Dev Containers: Reopen in Container ».
+3. `npm install` est lancé automatiquement.
 
-## 🔄 Intégration Continue
+## 🔄 Intégration continue
 
-Le workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) effectue :
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) s'exécute sur chaque push et chaque PR,
+avec une matrice Node 20/22/24 sur Linux plus macOS et Windows :
 
 1. `npm ci`
-2. `npm run lint:fix` (en mode tolérant)
-3. `npm run build`
-4. `npm test`
-5. Un smoke test du CLI
+2. `npm run format:check`
+3. `npm run lint`
+4. `npm run build`
+5. `npm test`
+6. Un smoke test du CLI, qui vérifie aussi que l'import du point d'entrée n'exécute pas le CLI.
 
-Adapter `npm test` pour refléter ta vraie suite avant de faire confiance aux pipelines.
+## 📦 Publication
 
-## 📁 Structure rapide
+[`.github/workflows/publish.yml`](.github/workflows/publish.yml) publie sur npm avec provenance
+lorsqu'un tag `v*` est poussé. Le workflow refuse de publier si le tag ne correspond pas à
+`package.json`. Pour publier une version :
 
-| Chemin | Rôle |
-|--------|------|
-| `index.ts` | Point d’entrée du CLI et définition de la commande `encode`. |
-| `read.files.ts` | Lecture asynchrone des fichiers à encoder. |
-| `translate.files.ts` | Conversion du texte en séquences Morse et rapport des caractères ignorés. |
-| `library.ts` | Table Morse (pattern et timings). |
-| `cli.mjs` | Shim Node utilisé par le binaire publié `morse_it`. |
+```bash
+npm version <patch|minor|major>
+git push --follow-tags
+```
+
+## 📁 Structure
+
+| Chemin               | Rôle                                                           |
+| -------------------- | -------------------------------------------------------------- |
+| `index.ts`           | Point d'entrée de la bibliothèque (ré-exports uniquement).     |
+| `cli.ts`             | Définition du CLI et des commandes `encode`, `decode`, `play`. |
+| `cli.mjs`            | Shim Node utilisé par le binaire publié `morse_it`.            |
+| `library.ts`         | Table Morse : motifs, timings dérivés et table inverse.        |
+| `translate.files.ts` | Encodage texte → Morse et décodage Morse → texte.              |
+| `read.files.ts`      | Lecture des fichiers, avec erreurs rapportées par fichier.     |
+| `input.ts`           | Résolution de la source d'entrée (`--text`, fichiers, stdin).  |
+| `morse.sound.ts`     | Planification des bips, rendu WAV et lecture multiplateforme.  |
+| `tests/`             | Suite de tests `node --test`.                                  |
 
 ## 📄 Licence
 
-ISC
+ISC — voir [LICENSE](LICENSE).
