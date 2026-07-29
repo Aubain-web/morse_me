@@ -2,32 +2,45 @@ name: CI
 
 on:
   push:
-    branches: ["*"]
+    # "**" also matches branches containing a slash (feat/foo); "*" does not.
+    branches: ['**']
   pull_request:
-    branches: ["main"]
+    branches: ['main']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20 is the floor declared in package.json engines, so it must be tested.
+        node-version: ['20', '22', '24']
+        os: [ubuntu-latest]
+        include:
+          - node-version: '22'
+            os: macos-latest
+          - node-version: '22'
+            os: windows-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Use Node.js 24
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
-          node-version: '24'
-
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json', '**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: ${{ matrix.node-version }}
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
 
       - name: Run linter
         run: npm run lint
@@ -39,8 +52,15 @@ jobs:
         run: npm test
 
       - name: Smoke test CLI
+        shell: bash
         run: |
+          set -euo pipefail
           printf 'SOS morse me' > sample.txt
-          node dist/index.js encode sample.txt
-          node dist/index.js play sample.txt --no-play --out morse.wav
-          node dist/index.js --help
+          node cli.mjs encode sample.txt
+          node cli.mjs decode --text '... --- ... / -- --- .-. ... .'
+          echo 'SOS' | node cli.mjs encode
+          node cli.mjs play sample.txt --no-play --out morse.wav
+          test -f morse.wav
+          node cli.mjs --help
+          # The library entry point must never run the CLI on import.
+          node -e "import('./dist/index.js').then((m) => { if (typeof m.translateTextToMorse !== 'function') throw new Error('missing export'); console.log('library entry OK'); })"

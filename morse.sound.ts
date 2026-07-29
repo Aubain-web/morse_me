@@ -1,7 +1,7 @@
-import { spawn } from 'child_process';
-import { promises as fs } from 'fs';
-import os from 'os';
-import path from 'path';
+import { spawn } from 'node:child_process';
+import { promises as fs } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { MORSE_CODE, TIMING } from './library.js';
 
 interface PlayOptions {
@@ -12,10 +12,32 @@ interface PlayOptions {
   play?: boolean;
 }
 
-function buildBeepSchedule(text: string, unitMs: number): Array<{ on: boolean; ms: number }> {
-  const schedule: Array<{ on: boolean; ms: number }> = [];
+interface BeepStep {
+  on: boolean;
+  ms: number;
+}
 
-  const push = (on: boolean, units: number) => {
+interface PlayResult {
+  /** Path of the WAV kept on disk, or `''` when nothing was kept. */
+  wavPath: string;
+  played: boolean;
+}
+
+/**
+ * Turn text into an on/off beep schedule.
+ *
+ * Gaps are *owed* rather than emitted eagerly: the largest pending gap wins and
+ * is only flushed right before the next tone. That keeps the standard Morse
+ * spacing exact — 1 unit between symbols, 3 between letters, 7 between words —
+ * instead of letting a letter gap and a word gap stack up to 10. It also means
+ * the schedule never starts or ends on silence.
+ */
+function buildBeepSchedule(text: string, unitMs: number): BeepStep[] {
+  const schedule: BeepStep[] = [];
+  let pendingGapUnits = 0;
+  let hasTone = false;
+
+  const append = (on: boolean, units: number) => {
     if (units <= 0) return;
     const ms = Math.max(0, Math.round(units * unitMs));
     if (ms === 0) return;
@@ -28,47 +50,45 @@ function buildBeepSchedule(text: string, unitMs: number): Array<{ on: boolean; m
     }
   };
 
+  /** Remember a gap; overlapping gaps collapse to the longest one required. */
+  const owe = (units: number) => {
+    if (!hasTone) return; // no leading silence
+    pendingGapUnits = Math.max(pendingGapUnits, units);
+  };
+
+  const emitTone = (units: number) => {
+    append(false, pendingGapUnits);
+    pendingGapUnits = 0;
+    append(true, units);
+    hasTone = true;
+  };
+
   const isWhitespace = (char: string) => char === ' ' || char === '\t';
 
-  for (let index = 0; index < text.length; index += 1) {
-    const rawChar = text[index];
-
+  for (const rawChar of text) {
     if (rawChar === '\r') continue;
 
-    if (rawChar === '\n') {
-      // treat newline like a word gap
-      push(false, TIMING.WORD_SPACE);
-      continue;
-    }
-
-    if (isWhitespace(rawChar)) {
-      push(false, TIMING.WORD_SPACE);
+    // A newline separates words just like a space does.
+    if (rawChar === '\n' || isWhitespace(rawChar)) {
+      owe(TIMING.WORD_SPACE);
       continue;
     }
 
     const entry = MORSE_CODE[rawChar.toUpperCase()];
     if (!entry) {
+      // Unsupported characters are dropped; the CLI reports them separately.
       continue;
     }
 
-    // pattern is '.' and '-' (ASCII)
     for (let symbolIndex = 0; symbolIndex < entry.pattern.length; symbolIndex += 1) {
-      const symbol = entry.pattern[symbolIndex];
-
-      if (symbol === '.') {
-        push(true, TIMING.DOT);
-      } else if (symbol === '-') {
-        push(true, TIMING.DASH);
+      if (symbolIndex > 0) {
+        owe(TIMING.INTRA_CHAR_SPACE);
       }
 
-      // intra-symbol gap (except after last symbol)
-      if (symbolIndex < entry.pattern.length - 1) {
-        push(false, TIMING.INTRA_CHAR_SPACE);
-      }
+      emitTone(entry.pattern[symbolIndex] === '-' ? TIMING.DASH : TIMING.DOT);
     }
 
-    // letter gap after each character
-    push(false, TIMING.LETTER_SPACE);
+    owe(TIMING.LETTER_SPACE);
   }
 
   return schedule;
@@ -170,7 +190,12 @@ async function playWavFileCrossPlatform(wavPath: string): Promise<boolean> {
       '$sp.PlaySync()',
     ].join('; ');
 
-    return tryPlayFileWithCommand('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps]);
+    return tryPlayFileWithCommand('powershell.exe', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      ps,
+    ]);
   }
 
   if (process.platform === 'darwin') {
@@ -184,10 +209,7 @@ async function playWavFileCrossPlatform(wavPath: string): Promise<boolean> {
   return false;
 }
 
-async function playMorseFromText(
-  text: string,
-  options: PlayOptions = {}
-): Promise<{ wavPath: string; played: boolean }> {
+async function playMorseFromText(text: string, options: PlayOptions = {}): Promise<PlayResult> {
   const frequencyHz = options.frequencyHz ?? 800;
   const unitMs = options.unitMs ?? 80;
   const sampleRateHz = options.sampleRateHz ?? 44_100;
@@ -232,5 +254,7 @@ export {
   buildBeepSchedule,
   encodeWavPcm16Mono,
   renderMorseWavSamples,
+  type BeepStep,
   type PlayOptions,
+  type PlayResult,
 };
