@@ -1,18 +1,27 @@
 name: Publish
 
 on:
-  # Tag pushes only. Listening to `release: published` as well would fire twice
-  # for a release created from a new tag, and the second run fails on a version
-  # npm already has.
+  # Two ways in:
+  #   - a push to `main` bumps the patch version, tags it and publishes it;
+  #   - a `v*` tag publishes exactly what that tag points at, without bumping.
+  #
+  # The bump commit is pushed with GITHUB_TOKEN, and GitHub deliberately does
+  # not start new workflow runs for those pushes, so this cannot loop. The
+  # `[skip ci]` marker in the commit message is the belt to that suspenders: it
+  # still holds if the push is ever switched to a PAT or an app token.
   push:
+    branches:
+      - 'main'
     tags:
       - 'v*'
   workflow_dispatch:
 
 permissions:
-  contents: read
-  id-token: write
+  contents: write # push the bump commit and its tag
+  id-token: write # npm Trusted Publishing (OIDC)
 
+# Never cancel a publish, and never let two of them race: the second would push
+# a bump on top of a stale main and be rejected.
 concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: false
@@ -23,6 +32,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          # Check out the branch itself, not the detached commit, so the bump
+          # has somewhere to land. On a tag run this resolves to the tag.
+          ref: ${{ github.ref_name }}
 
       - name: Use Node.js 24
         uses: actions/setup-node@v7
@@ -60,6 +73,18 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      # Only after the gates above are green, so a broken main burns a CI run
+      # rather than a version number.
+      - name: Bump patch version and tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          npm version patch -m 'chore(release): v%s [skip ci]'
+          git push --follow-tags
+          echo "Publishing version $(node -p "require('./package.json').version")"
 
       # Auth is handled by npm Trusted Publishing (OIDC) — no NPM_TOKEN needed.
       # Provenance is generated automatically; keep --access public for the scoped package.
