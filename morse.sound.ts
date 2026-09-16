@@ -180,11 +180,23 @@ async function tryPlayFileWithCommand(command: string, args: string[]): Promise<
   }
 }
 
+/**
+ * Embed a path in a PowerShell *single-quoted* literal.
+ *
+ * Double-quoted PowerShell strings expand what they contain, so a path holding
+ * `$(...)`, `$var` or a backtick would be run as code. Single quotes expand
+ * nothing; the only character needing an escape is the quote itself, which
+ * doubles.
+ */
+function toPowerShellLiteral(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
 async function playWavFileCrossPlatform(wavPath: string): Promise<boolean> {
   if (process.platform === 'win32') {
     const ps = [
       "$ErrorActionPreference = 'Stop'",
-      `$p = ${JSON.stringify(wavPath)}`,
+      `$p = ${toPowerShellLiteral(wavPath)}`,
       '$sp = New-Object System.Media.SoundPlayer($p)',
       '$sp.Load()',
       '$sp.PlaySync()',
@@ -227,13 +239,21 @@ async function playMorseFromText(text: string, options: PlayOptions = {}): Promi
   const wav = encodeWavPcm16Mono(samples, sampleRateHz);
 
   const isExplicitOutput = Boolean(options.outFile);
+
+  /*
+   * A scratch WAV gets its own directory from `mkdtemp`, which creates it
+   * atomically with an unpredictable name and owner-only permissions. A
+   * name derived from the pid and the clock would be guessable, and another
+   * local user could park a symlink there first and redirect the write.
+   */
+  const tempDir = isExplicitOutput ? '' : await fs.mkdtemp(path.join(os.tmpdir(), 'morse_it-'));
   const wavPath = isExplicitOutput
     ? path.resolve(options.outFile as string)
-    : path.join(os.tmpdir(), `morse_it_${process.pid}_${Date.now()}.wav`);
-
-  await fs.writeFile(wavPath, wav);
+    : path.join(tempDir, 'morse.wav');
 
   try {
+    await fs.writeFile(wavPath, wav);
+
     let played = false;
     if (shouldPlay) {
       played = await playWavFileCrossPlatform(wavPath);
@@ -244,7 +264,7 @@ async function playMorseFromText(text: string, options: PlayOptions = {}): Promi
   } finally {
     // Never leave temp audio files behind on users' machines.
     if (!isExplicitOutput) {
-      await fs.rm(wavPath, { force: true });
+      await fs.rm(tempDir, { recursive: true, force: true });
     }
   }
 }
@@ -254,6 +274,9 @@ export {
   buildBeepSchedule,
   encodeWavPcm16Mono,
   renderMorseWavSamples,
+  // Not re-exported from `index.ts`: internal, exposed so the quoting rule can
+  // be tested directly rather than through a Windows-only spawn.
+  toPowerShellLiteral,
   type BeepStep,
   type PlayOptions,
   type PlayResult,

@@ -10,6 +10,7 @@ import {
   encodeWavPcm16Mono,
   playMorseFromText,
   renderMorseWavSamples,
+  toPowerShellLiteral,
 } from '../morse.sound.js';
 
 const UNIT = 10;
@@ -148,4 +149,17 @@ test('playMorseFromText: writes file only when outFile is provided', async () =>
   } finally {
     await fs.rm(path.dirname(outFile), { recursive: true, force: true });
   }
+});
+
+test('toPowerShellLiteral: keeps expansion metacharacters inert', () => {
+  // Single-quoted PowerShell strings expand nothing, so these stay data.
+  assert.equal(toPowerShellLiteral('C:\\out\\$(calc).wav'), "'C:\\out\\$(calc).wav'");
+  assert.equal(toPowerShellLiteral('C:\\out\\$env:PATH.wav'), "'C:\\out\\$env:PATH.wav'");
+  assert.equal(toPowerShellLiteral('C:\\out\\`n.wav'), "'C:\\out\\`n.wav'");
+});
+
+test('toPowerShellLiteral: doubles the quote that would end the literal', () => {
+  // Without doubling, `'; calc; '` would close the string and run a command.
+  assert.equal(toPowerShellLiteral("a'; calc; '.wav"), "'a''; calc; ''.wav'");
+  assert.equal(toPowerShellLiteral("O'Brien.wav"), "'O''Brien.wav'");
 });
