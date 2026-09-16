@@ -79,3 +79,12 @@ jobs:
       # Provenance is generated automatically; keep --access public for the scoped package.
       - name: Publish to npm
         run: npm publish --access public
+
+      # After npm, so a failed publish never announces a release that does not exist.
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="v$(node -p "require('./package.json').version")"
+          gh release create "$TAG" --title "$TAG" --generate-notes --verify-tag
