@@ -1,16 +1,17 @@
 name: Publish
 
 on:
-  # Tag pushes only. Listening to `release: published` as well would fire twice
-  # for a release created from a new tag, and the second run fails on a version
-  # npm already has.
+  # The bump commit is pushed with GITHUB_TOKEN, and GitHub does not start
+  # workflow runs for those pushes, so publishing from `main` cannot loop.
   push:
+    branches:
+      - 'main'
     tags:
       - 'v*'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # push the bump commit and its tag
   id-token: write
 
 concurrency:
@@ -23,6 +24,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          # The branch itself, not a detached commit, so the bump has somewhere to land.
+          ref: ${{ github.ref_name }}
 
       - name: Use Node.js 24
         uses: actions/setup-node@v7
@@ -60,6 +64,16 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Bump patch version and tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          npm version patch -m 'chore(release): v%s [skip ci]'
+          git push --follow-tags
+          echo "Publishing version $(node -p "require('./package.json').version")"
 
       # Auth is handled by npm Trusted Publishing (OIDC) — no NPM_TOKEN needed.
       # Provenance is generated automatically; keep --access public for the scoped package.
