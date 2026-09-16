@@ -1,8 +1,6 @@
 name: Publish
 
 on:
-  # The bump commit is pushed with GITHUB_TOKEN, and GitHub does not start
-  # workflow runs for those pushes, so publishing from `main` cannot loop.
   push:
     branches:
       - 'main'
@@ -25,7 +23,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          # The branch itself, not a detached commit, so the bump has somewhere to land.
           ref: ${{ github.ref_name }}
 
       - name: Use Node.js 24
@@ -75,12 +72,14 @@ jobs:
           git push --follow-tags
           echo "Publishing version $(node -p "require('./package.json').version")"
 
+      - name: Use the npm-facing README
+        run: mv README.npm.md README.md
+
       # Auth is handled by npm Trusted Publishing (OIDC) — no NPM_TOKEN needed.
       # Provenance is generated automatically; keep --access public for the scoped package.
       - name: Publish to npm
         run: npm publish --access public
 
-      # After npm, so a failed publish never announces a release that does not exist.
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
